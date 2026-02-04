@@ -2,14 +2,14 @@ import pandas as pd
 import json
 
 # Load your cleaned SQL-ready CSV
-df = pd.read_csv('sql_ready_extreme_sites.csv')
+df = pd.read_csv('data/table.csv')
 
 def df_to_geojson_with_filters(df):
     features = []
     # Specify the columns you want to use as filters or display in popups
     filter_columns = [
         'internal_id', 'Site_Name', 'Extreme_Group', 'Extreme_Subgroup', 
-        'Administrative_Region', 'Province', 'Temperature_C', 'pH'
+        'Administrative Region', 'Province', 'Temperature (°C)', 'pH'
     ]
     
     for _, row in df.iterrows():
@@ -20,7 +20,7 @@ def df_to_geojson_with_filters(df):
             "type": "Feature",
             "geometry": {
                 "type": "Point",
-                "coordinates": [float(row['Longitude_E']), float(row['Latitude_N'])]
+                "coordinates": [float(row['Longitude (°E)']), float(row['Latitude (°N)'])]
             },
             "properties": prop_dict
         }

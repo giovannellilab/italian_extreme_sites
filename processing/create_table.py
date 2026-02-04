@@ -13,6 +13,10 @@ def transform_csv_to_sql(file_path, table_name, id_prefix):
     # 3. Drop rows that are missing critical information
     # NOTE: We drop rows only if they lack BOTH a name and coordinates.
     # If we dropped rows with ANY empty field, we would lose almost all data.
+
+    df['Longitude (°E)'] = pd.to_numeric(df['Longitude (°E)'], errors='coerce')
+    df['Latitude (°N)'] = pd.to_numeric(df['Latitude (°N)'], errors='coerce')
+
     df = df.dropna(subset=['Site_Name', 'Latitude (°N)', 'Longitude (°E)'], how='all')
     df.insert(0, 'internal_id', [f"{id_prefix}_{i+1:05d}" for i in range(len(df))])
     print(len(df))
@@ -26,7 +30,6 @@ def transform_csv_to_sql(file_path, table_name, id_prefix):
     geo_loca = df[['Latitude (°N)', 'Longitude (°E)']]
     geo_loca.to_csv('locations_only.csv', index = None)
 
-    df.to_csv('table.csv', index = None)
     # Export cleaned CSV for manual inspection
     output_name = f"sql_ready_{table_name}.csv"
     df.to_csv(output_name, index=False)
@@ -35,6 +38,4 @@ def transform_csv_to_sql(file_path, table_name, id_prefix):
     conn.close()
 
 # Run the transformation for both datasets
-sql_obj = transform_csv_to_sql('ITALIAN_SITE_TABLE.xlsx', 'extreme_sites', 'EXT')
-#transform_csv_to_sql('caves.csv', 'cave_sites', 'CAV')
-print(sql_obj)
+sql_obj = transform_csv_to_sql('data/ITALIAN_SITE_TABLE.xlsx', 'extreme_sites', 'EXT')
