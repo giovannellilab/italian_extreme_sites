@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University WebGIS - Extreme Sites Italy</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body { margin: 0; padding: 0; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; }
+        #map { flex-grow: 1; }
+        
+        /* Sidebar/Control styling */
+        .controls {
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1001;
+        }
+        .filter-group { display: flex; flex-direction: column; }
+        label { font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; color: #333; }
+        select, input { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+
+<div class="controls">
+    <div class="filter-group">
+        <label>Administrative Region</label>
+        <select id="regionFilter">
+            <option value="all">All Regions</option>
+            </select>
+    </div>
+
+    <div class="filter-group">
+        <label>Max pH: <span id="phVal">14</span></label>
+        <input type="range" id="phFilter" min="0" max="14" step="0.1" value="14">
+    </div>
+    
+    <div id="stats" style="margin-left: auto; font-size: 0.9rem;">
+        Showing: <span id="count">0</span> / 5000 sites
+    </div>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // 1. Initialize Map
+    const map = L.map('map').setView([42.0, 12.5], 6);
+    L.tileLayer('https://{s}.tile.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    let geojsonData = null;
+    let markers = L.layerGroup().addTo(map);
+
+    // 2. Load the "Internal Database" (sites.json)
+    fetch('data/sites.json')
+        .then(res => res.json())
+        .then(data => {
+            geojsonData = data;
+            populateRegionDropdown(data);
+            applyFilters(); // Initial render
+        });
+
+    // 3. Populate Dropdown dynamically from data
+    function populateRegionDropdown(data) {
+        const select = document.getElementById('regionFilter');
+        const regions = [...new Set(data.features.map(f => f.properties.Administrative_Region))].sort();
+        regions.forEach(r => {
+            if(r && r !== "N/A") {
+                let opt = document.createElement('option');
+                opt.value = r;
+                opt.innerHTML = r;
+                select.appendChild(opt);
+            }
+        });
+    }
+
+    // 4. Filtering Logic
+    function applyFilters() {
+        const selectedRegion = document.getElementById('regionFilter').value;
+        const maxPH = parseFloat(document.getElementById('phFilter').value);
+        document.getElementById('phVal').innerText = maxPH;
+
+        markers.clearLayers();
+        let visibleCount = 0;
+
+        geojsonData.features.forEach(feature => {
+            const p = feature.properties;
+            
+            // Check filters
+            const regionMatch = (selectedRegion === 'all' || p.Administrative_Region === selectedRegion);
+            // Handle cases where pH might be "N/A" (we show N/A sites by default, or you can hide them)
+            const phMatch = (p.pH === "N/A" || parseFloat(p.pH) <= maxPH);
+
+            if (regionMatch && phMatch) {
+                visibleCount++;
+                const lat = feature.geometry.coordinates[1];
+                const lng = feature.geometry.coordinates[0];
+
+                const marker = L.circleMarker([lat, lng], {
+                    radius: 6,
+                    fillColor: "#e63946",
+                    color: "#fff",
+                    weight: 1,
+                    fillOpacity: 0.8
+                });
+
+                // Popup using our internal_id
+                marker.bindPopup(`
+                    <strong>${p.Site_Name}</strong><br>
+                    ID: <code>${p.internal_id}</code><br>
+                    Region: ${p.Administrative_Region}<br>
+                    pH: ${p.pH}
+                `);
+                markers.addLayer(marker);
+            }
+        });
+
+        document.getElementById('count').innerText = visibleCount;
+    }
+
+    // 5. Event Listeners
+    document.getElementById('regionFilter').addEventListener('change', applyFilters);
+    document.getElementById('phFilter').addEventListener('input', applyFilters);
+
+</script>
+</body>
+</html>
