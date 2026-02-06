@@ -16,8 +16,8 @@ def transform_csv_to_sql(file_path, table_name, id_prefix):
 
     df['Longitude (°E)'] = pd.to_numeric(df['Longitude (°E)'], errors='coerce')
     df['Latitude (°N)'] = pd.to_numeric(df['Latitude (°N)'], errors='coerce')
+    df = df.dropna(subset=['Latitude (°N)', 'Longitude (°E)'], how='any')
 
-    df = df.dropna(subset=['Site_Name', 'Latitude (°N)', 'Longitude (°E)'], how='all')
     df.insert(0, 'internal_id', [f"{id_prefix}_{i+1:05d}" for i in range(len(df))])
     print(len(df))
 

@@ -3,8 +3,9 @@ import json
 
 # Load your cleaned SQL-ready CSV
 df = pd.read_csv('data/table.csv')
+df2 = pd.read_csv('data/locations_only.csv')
 
-def df_to_geojson_with_filters(df):
+def df_to_geojson_with_filters(df,df2):
     features = []
     only_coord = []
     # Specify the columns you want to use as filters or display in popups
@@ -12,7 +13,7 @@ def df_to_geojson_with_filters(df):
         'internal_id', 'Site_Name', 'Extreme_Group', 'Extreme_Subgroup', 
         'Administrative Region', 'Province', 'Temperature (°C)', 'pH'
     ]
-    df = df.head(5000)
+    df2 = df2.head(5000)
 
     for _, row in df.iterrows():
         # Clean the data: Convert NaNs to None (JSON null)
@@ -26,6 +27,7 @@ def df_to_geojson_with_filters(df):
             }, "properties" : prop_dict
         }
         features.append(feature)
+    for _,row in df2.iterrows():
         feature2 = {
             "type": "Feature",
             "geometry": {
@@ -38,7 +40,7 @@ def df_to_geojson_with_filters(df):
 
     return features, only_coord
 
-feat, coord = df_to_geojson_with_filters(df)
+feat, coord = df_to_geojson_with_filters(df,df2)
 # Save to your project data folder
 with open('data/sites.json', 'w') as f:
     json.dump(feat,f)
