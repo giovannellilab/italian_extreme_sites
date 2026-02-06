@@ -6,12 +6,14 @@ df = pd.read_csv('data/table.csv')
 
 def df_to_geojson_with_filters(df):
     features = []
+    only_coord = []
     # Specify the columns you want to use as filters or display in popups
     filter_columns = [
         'internal_id', 'Site_Name', 'Extreme_Group', 'Extreme_Subgroup', 
         'Administrative Region', 'Province', 'Temperature (°C)', 'pH'
     ]
-    
+    df = df.head(1200)
+
     for _, row in df.iterrows():
         # Clean the data: Convert NaNs to None (JSON null)
         prop_dict = {col: (row[col] if pd.notna(row[col]) else None) for col in filter_columns}
@@ -21,13 +23,24 @@ def df_to_geojson_with_filters(df):
             "geometry": {
                 "type": "Point",
                 "coordinates": [float(row['Longitude (°E)']), float(row['Latitude (°N)'])]
-            },
-            "properties": prop_dict
+            }, "properties" : prop_dict
         }
         features.append(feature)
-    
-    return {"type": "FeatureCollection", "features": features}
+        feature2 = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [float(row['Longitude (°E)']), float(row['Latitude (°N)'])]
+            }
+        }
+        only_coord.append(feature2)
 
+
+    return features, only_coord
+
+feat, coord = df_to_geojson_with_filters(df)
 # Save to your project data folder
 with open('data/sites.json', 'w') as f:
-    json.dump(df_to_geojson_with_filters(df), f)
+    json.dump(feat,f)
+with open('data/lat_long.json', 'w') as f2:
+    json.dump(coord, f2)
