@@ -12,7 +12,7 @@ def df_to_geojson_with_filters(df):
         'internal_id', 'Site_Name', 'Extreme_Group', 'Extreme_Subgroup', 
         'Administrative Region', 'Province', 'Temperature (°C)', 'pH'
     ]
-    df = df.head(1200)
+    df = df.head(5000)
 
     for _, row in df.iterrows():
         # Clean the data: Convert NaNs to None (JSON null)

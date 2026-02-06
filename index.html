@@ -35,28 +35,24 @@
     // IMPORTANT: Make sure the file name in your 'data' folder matches this exactly!
     // 2. Load the SLIM data (lat_long.json)
     fetch('data/lat_long.json')
-        .then(res => {
-            if (!res.ok) throw new Error("File not found! Check the filename.");
-            return res.json();
-        })
+        .then(res => res.json())
         .then(data => {
-            console.log("Data loaded! Array length:", data.length);
-            
+            // STEP 1: Use Canvas for performance
             const myRenderer = L.canvas({ padding: 0.5 });
 
-            // Since your file is just [ {}, {} ], we loop through 'data' directly
             data.forEach(feature => {
                 const lon = feature.geometry.coordinates[0];
                 const lat = feature.geometry.coordinates[1];
 
                 if (!isNaN(lat) && !isNaN(lon)) {
+                    // STEP 2: Add markers to the Canvas renderer
                     L.circleMarker([lat, lon], {
-                        renderer: myRenderer,
-                        radius: 3,
+                        renderer: myRenderer, // THIS IS THE KEY
+                        radius: 3,           // Smaller radius looks better for 5000 points
                         fillColor: "#ff4444",
-                        color: "#000",
-                        weight: 0.5,
-                        fillOpacity: 0.8
+                        color: "#ff4444",
+                        weight: 0,
+                        fillOpacity: 0.6
                     }).addTo(map);
                 }
             });
